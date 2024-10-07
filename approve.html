@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Approve Delivery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 40px;
+            text-align: center;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #25D366;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #25D366;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #128C7E;
+        }
+        #status {
+            color: green;
+            margin-top: 20px;
+        }
+        .note {
+            font-size: 14px;
+            color: #555;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Approve Delivery</h2>
+        <p>Please click the button below to approve the delivery. Your current location will be captured as proof.</p>
+        <button id="approveBtn">Approve Delivery</button>
+        <p id="status"></p>
+        <p class="note">After clicking "Approve Delivery", manually send the WhatsApp message to the consignee.</p>
+    </div>
+
+    <script>
+        document.getElementById('approveBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                alert('Geolocation is not supported by your browser.');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(sendApproval, handleError);
+        });
+
+        function sendApproval(position) {
+            const latitude  = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // Extract consignmentId from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const consignmentId = params.get('consignmentId') || 'Unknown';
+
+            const fixedConsigneeNumber = '+919059709269'; // Fixed Consignee's WhatsApp number
+
+            // Construct proof message
+            const proofMessage = encodeURIComponent(
+                `Delivery Approved.\nConsignment ID: ${consignmentId}\nLocation: Latitude ${latitude}, Longitude ${longitude}`
+            );
+
+            // Remove '+' and any non-digit characters for the WhatsApp URL
+            const whatsappNumber = fixedConsigneeNumber.replace(/\D/g, '');
+
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${proofMessage}`;
+
+            // Open WhatsApp Web with the pre-filled message
+            window.open(whatsappURL, '_blank');
+
+            // Inform the user
+            document.getElementById('status').innerText = 'WhatsApp message generated. Please send it to the consignee.';
+        }
+
+        function handleError() {
+            alert('Unable to retrieve your location.');
+        }
+    </script>
+</body>
+</html>

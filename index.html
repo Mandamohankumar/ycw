@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EPOD - Electronic Proof of Delivery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 40px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #25D366;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px 0;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 12px;
+            width: 100%;
+            background-color: #25D366;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #128C7E;
+        }
+        #message {
+            color: green;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .note {
+            font-size: 14px;
+            color: #555;
+            margin-top: 10px;
+        }
+        #preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #preview img, #preview iframe {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>EPOD - Electronic Proof of Delivery</h2>
+        <form id="epodForm">
+            <label for="invoiceFile">Upload Invoice:</label>
+            <input type="file" id="invoiceFile" name="invoiceFile" accept=".pdf,.png,.jpg,.jpeg" required>
+
+            <button type="submit">Send Invoice via WhatsApp</button>
+        </form>
+        <p class="note">After clicking "Send Invoice via WhatsApp", manually attach the invoice file in the WhatsApp message before sending.</p>
+        <div id="preview"></div>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        // Function to display the preview of the uploaded invoice
+        function displayPreview(file) {
+            const preview = document.getElementById('preview');
+            preview.innerHTML = ''; // Clear previous preview
+
+            const fileType = file.type;
+            const fileURL = URL.createObjectURL(file);
+
+            if (fileType.startsWith('image/')) {
+                // If the file is an image, display it
+                const img = document.createElement('img');
+                img.src = fileURL;
+                img.alt = 'Invoice Preview';
+                preview.appendChild(img);
+            } else if (fileType === 'application/pdf') {
+                // If the file is a PDF, embed it using an iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = fileURL;
+                iframe.width = '100%';
+                iframe.height = '500px';
+                iframe.title = 'Invoice Preview';
+                preview.appendChild(iframe);
+            } else {
+                // Unsupported file type
+                preview.innerHTML = '<p>Preview not available for this file type.</p>';
+            }
+        }
+
+        document.getElementById('invoiceFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                displayPreview(file);
+            } else {
+                document.getElementById('preview').innerHTML = '';
+            }
+        });
+
+        document.getElementById('epodForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const invoiceFile = document.getElementById('invoiceFile').files[0];
+            const fixedApproverNumber = '+916302665668'; // Fixed Approver's WhatsApp number
+            const fixedConsigneeNumber = '+919059709269'; // Fixed Consignee's WhatsApp number
+
+            if (!invoiceFile) {
+                alert('Please select an invoice file.');
+                return;
+            }
+
+            // Generate a unique consignment ID (simple example using timestamp)
+            const consignmentId = `C${Date.now()}`;
+
+            // Approval URL pointing to approve.html hosted publicly
+            // Replace 'https://yourusername.github.io/epod-approve-page/approve.html' with the actual URL where approve.html is hosted
+            const approvalURL = ` https://mandamohankumar.github.io/ycw/approve.html?consignmentId=${consignmentId}`;
+
+            const message = encodeURIComponent(
+                `Hello, please find attached the invoice for your recent delivery.\nConsignment ID: ${consignmentId}\n\nKindly approve the delivery by clicking the link below:\n${approvalURL}`
+            );
+
+            // Remove '+' and any non-digit characters for the WhatsApp URL
+            const whatsappNumber = fixedApproverNumber.replace(/\D/g, '');
+
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${message}`;
+
+            // Open WhatsApp Web with the pre-filled message
+            window.open(whatsappURL, '_blank');
+
+            // Inform the user
+            document.getElementById('message').innerText = 'WhatsApp message generated. Please attach the invoice file and send it to the approver.';
+        });
+    </script>
+</body>
+</html>
